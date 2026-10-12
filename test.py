@@ -2,6 +2,8 @@ print("hi")
 print("test")
 print("bonjour")
 
+# Test de l'API MusicBrainz : 
+# recherche d'un artiste par son nom et affichage du premier résultat
 import requests
 
 url = "https://musicbrainz.org/ws/2/artist/"
