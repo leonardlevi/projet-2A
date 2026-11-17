@@ -25,6 +25,7 @@ URL_COMMUNES = (
     "https://geo.api.gouv.fr/communes?fields=code,codeDepartement,population,surface&format=json"
 )
 URL_REGIONS = "https://geo.api.gouv.fr/departements?fields=code,nom,codeRegion"
+URL_BPE = "https://api.insee.fr/melodi/file/DS_BPE/DS_BPE_2025_CSV_FR"
 
 
 def obesite_epicov():
@@ -108,3 +109,20 @@ def regions_departements():
     chemin = telecharger(URL_REGIONS, "departements_regions.json")
     df = pd.read_json(chemin, dtype={"code": str, "codeRegion": str})
     return df.rename(columns={"code": "dep", "codeRegion": "region"})[["dep", "region"]]
+
+
+def equipements_departements():
+    chemin = telecharger(URL_BPE, "bpe_2025.zip")
+    types = {"A504": "restauration", "F120": "salles_sport"}
+    morceaux = []
+    with zipfile.ZipFile(chemin) as archive:
+        with archive.open("DS_BPE_2025_data.csv") as f:
+            for morceau in pd.read_csv(f, sep=";", dtype=str, chunksize=500_000):
+                garde = (morceau["GEO_OBJECT"] == "DEP") & morceau["FACILITY_TYPE"].isin(types)
+                morceaux.append(morceau[garde])
+
+    df = pd.concat(morceaux)
+    df["nombre"] = df["OBS_VALUE"].astype(float)
+    df["type"] = df["FACILITY_TYPE"].map(types)
+    df = df.pivot_table(index="GEO", columns="type", values="nombre", aggfunc="sum")
+    return df.rename_axis(index="dep", columns=None).reset_index()
