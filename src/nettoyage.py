@@ -1,8 +1,10 @@
+import json
 import zipfile
 
+import geopandas as gpd
 import pandas as pd
 
-from src.collecte import telecharger
+from src.collecte import telecharger, telecharger_fastfoods
 
 URL_EPICOV_V2 = (
     "https://data.drees.solidarites-sante.gouv.fr/api/explore/v2.1/"
@@ -26,6 +28,9 @@ URL_COMMUNES = (
 )
 URL_REGIONS = "https://geo.api.gouv.fr/departements?fields=code,nom,codeRegion"
 URL_BPE = "https://api.insee.fr/melodi/file/DS_BPE/DS_BPE_2025_CSV_FR"
+URL_CONTOURS = (
+    "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson"
+)
 
 
 def obesite_epicov():
@@ -126,3 +131,20 @@ def equipements_departements():
     df["type"] = df["FACILITY_TYPE"].map(types)
     df = df.pivot_table(index="GEO", columns="type", values="nombre", aggfunc="sum")
     return df.rename_axis(index="dep", columns=None).reset_index()
+
+
+def fastfoods_departements():
+    chemin = telecharger_fastfoods()
+    elements = json.loads(chemin.read_text(encoding="utf-8"))["elements"]
+    points = []
+    for e in elements:
+        if "lat" in e:
+            points.append((e["lon"], e["lat"]))
+        elif "center" in e:
+            points.append((e["center"]["lon"], e["center"]["lat"]))
+    fastfoods = gpd.GeoDataFrame(geometry=gpd.points_from_xy(*zip(*points)), crs="EPSG:4326")
+
+    contours = gpd.read_file(telecharger(URL_CONTOURS, "departements.geojson"))
+    jointure = gpd.sjoin(fastfoods, contours[["code", "geometry"]], predicate="within")
+    nombre = jointure.groupby("code").size().rename("fastfoods")
+    return nombre.rename_axis("dep").reset_index()
