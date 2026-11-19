@@ -5,6 +5,7 @@ import geopandas as gpd
 import pandas as pd
 
 from src.collecte import telecharger, telecharger_fastfoods
+from src.config import DOSSIER_TRAITE
 
 URL_EPICOV_V2 = (
     "https://data.drees.solidarites-sante.gouv.fr/api/explore/v2.1/"
@@ -148,3 +149,23 @@ def fastfoods_departements():
     jointure = gpd.sjoin(fastfoods, contours[["code", "geometry"]], predicate="within")
     nombre = jointure.groupby("code").size().rename("fastfoods")
     return nombre.rename_axis("dep").reset_index()
+
+
+def table_finale():
+    df = (
+        obesite_epicov()
+        .merge(pauvrete_filosofi(), on="dep")
+        .merge(population_insee(), on="dep")
+        .merge(densite_departements(), on="dep")
+        .merge(apl_departements(), on="dep")
+        .merge(equipements_departements(), on="dep")
+        .merge(fastfoods_departements(), on="dep")
+        .merge(regions_departements(), on="dep")
+    )
+    df["restauration_10k"] = df["restauration"] / df["population"] * 10_000
+    df["salles_sport_10k"] = df["salles_sport"] / df["population"] * 10_000
+    df["fastfoods_10k"] = df["fastfoods"] / df["population"] * 10_000
+
+    DOSSIER_TRAITE.mkdir(parents=True, exist_ok=True)
+    df.to_csv(DOSSIER_TRAITE / "departements.csv", index=False)
+    return df
