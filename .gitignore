@@ -15,9 +15,5 @@ env/
 .DS_Store
 Thumbs.db
 
-# Données brutes volumineuses : recréées par les scripts de collecte
-data/raw/*
-!data/raw/.gitkeep
-
 # Secrets éventuels
 .env
