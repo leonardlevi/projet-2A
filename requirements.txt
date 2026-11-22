@@ -1,20 +1,19 @@
+# Python 3.10 ou plus récent
+
 # Données et calcul
-pandas>=2.0
-numpy>=1.24
-pyarrow>=14.0        # lecture/écriture parquet
-openpyxl>=3.1        # fichiers Excel de l'INSEE
+pandas==2.3.3
+numpy==2.2.6
+openpyxl==3.1.5
 
 # Collecte
-requests>=2.31       # API Overpass, téléchargements
+requests==2.34.2
 
 # Cartes et graphiques
-geopandas>=0.14
-matplotlib>=3.7
-seaborn>=0.13
+geopandas==1.1.4
+matplotlib==3.10.9
 
 # Analyse statistique
-statsmodels>=0.14
-scipy>=1.11
+statsmodels==0.15.0
 
 # Notebook
-jupyter>=1.0
+ipykernel==7.3.0
