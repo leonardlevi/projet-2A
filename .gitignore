@@ -14,6 +14,3 @@ env/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Secrets éventuels
-.env
